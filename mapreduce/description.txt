@@ -1,0 +1,6 @@
+#11:In order to infer schema by reflection, I created class Graph and initialised the column names so that it can read input by this schema instead of assuming one.
+#20:I'm accessing the objects of Graph class to retrieve inputs in each line, splitting by tabs and converting to a dataframe
+#22:I'm filtering the dataframe by weight, eliminating records having weight less than 5
+#23:grouping dataframe by source and finding sum of the weight for each source, naming it as outweight
+#24:similarly,grouping dataframe by target nodes and finding sum of the weight for each target, naming it as inweight
+#26: Based on unique id performed outer join on the above 2 dataframes. we use outer join to include nodes that are are present in source but not in target or vice versa. This join produces null values but this has been taken care of.
