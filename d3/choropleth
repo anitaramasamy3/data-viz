@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<style>
+body {
+  font: 14px sans-serif;
+}
+
+.states {
+  fill: none;
+  stroke: #fff;
+  stroke-linejoin: round;
+}
+
+.d3-tip {
+  line-height: 1;
+  font-weight: bold;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: red;
+  border-radius: 2px;
+}
+
+.Oranges .q0-9{fill:rgb(255,245,235)}
+.Oranges .q1-9{fill:rgb(254,230,206)}
+.Oranges .q2-9{fill:rgb(253,208,162)}
+.Oranges .q3-9{fill:rgb(253,174,107)}
+.Oranges .q4-9{fill:rgb(253,141,60)}
+.Oranges .q5-9{fill:rgb(241,105,19)}
+.Oranges .q6-9{fill:rgb(217,72,1)}
+.Oranges .q7-9{fill:rgb(166,54,3)}
+.Oranges .q8-9{fill:rgb(127,39,4)}
+
+.focus text {
+  fill: black;
+  font-weight: 600;
+}
+
+.legend {
+                position:absolute;
+                left:800px;
+                top:350px;
+}
+
+</style>
+
+<body>
+<script src="../lib/d3.v3.min.js"></script>
+<script src="../lib/d3.tip.v0.6.3.js"></script>
+<script src="../lib/d3-queue.v3.min.js"></script>
+<script src="../lib/topojson.v1.min.js"></script>
+<script>
+
+  var legendText = ["$4275","$8550","$12825","$17100","$21375","$25650","$29925","$34200","$38475"];
+var color = d3.scale.threshold()
+    .domain([0,4275,8550,12825,17100,21375,25650,29925,34200])
+    .range(["#fff7ec","#fee8c8","#fdd49e","#fdbb84","#fc8d59","#ef6548","#d7301f","#b30000","#7f0000"]);
+width = 960,
+    height = 700;
+dataset = [];
+d3.csv("median_ages.csv", function(error, data){
+  data.forEach(function(d){
+    dataset.push({"id":+d.id,"name":d.name,"median_age":+d.median_age});
+  });
+});
+popById = d3.map();
+
+
+quantize = d3.scale.quantize()
+    .range(d3.range(9).map(function(i) { return "q" + i + "-9"; }));
+
+projection = d3.geo.albersUsa()
+    .scale(1000)
+    .translate([width / 2, height / 2]);
+
+path = d3.geo.path()
+    .projection(projection);
+
+
+tip = d3.tip()
+  .attr('class', 'd3-tip')
+  .offset([+10, 0])
+  .html(function(d) {
+    return obj_for_id(d.id);
+  });
+
+svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+svg.call(tip);
+
+
+q = d3.queue();
+ q.defer(d3.json, "us.json")
+ .defer(d3.json, "median_earnings.json")
+ .defer(d3.csv, "median_ages.csv")
+ .await(read_pop);
+
+function read_pop(error, us, median_earnings) 
+  {d = median_earnings;
+    for (i=0; i<d.length;i++){
+      popById.set(d[i].id, +d[i].median_earnings)
+    }
+    plot(error, us)
+  }
+
+
+
+function obj_for_id(id){
+array_select_obj=[];
+abc = [];
+var d = dataset;
+    for (i=0; i<d.length;i++){
+      if(d[i].id==id){
+        array_select_obj.push({"name":d[i].name, "median_age":+d[i].median_age});
+      }
+    }
+    abc = array_select_obj.sort(function(x,y) {
+         return d3.ascending(+x.median_age, +y.median_age);
+    })
+    var new_abc=abc.slice(0,5);
+    
+    // convert array to string
+     var myString = "";
+    var i = 0;
+    while(i<new_abc.length){
+       myString = myString + (new_abc[i].name +" - "+ new_abc[i].median_age+"</br>");
+       i++;
+    }
+    return myString;
+}
+
+
+
+var legend = d3.select("body").append("svg")
+                                               .attr("class", "legend")
+                                               .attr("width", 140)
+                                                .attr("height", 200)
+                                                                .selectAll("g")
+                                                                .data(color.domain().slice())
+                                                                .enter()
+                                                                .append("g")
+                                               .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+                legend.append("rect")
+                                  .attr("width", 18)
+                                  .attr("height", 18)
+                                  .style("fill", color);
+
+                legend.append("text")
+                                  .data(legendText)
+                 .attr("x", 24)
+                 .attr("y", 9)
+                 .attr("dy", ".35em")
+                 .text(function(d) { return d; });
+
+function plot(error, us) {
+  console.log("in here");
+  console.log(quantize.domain(d3.extent(popById.values())));
+
+  svg.append("g")
+      .attr("class", "states Oranges")
+    .selectAll("path")
+      .data(topojson.feature(us, us.objects.states).features)
+    .enter().append("path")
+      .attr("class", function(d) { return quantize(popById.get(d.id));})
+      .attr("d", path)
+      .on("mouseover", tip.show)
+      .on("mouseout", tip.hide);
+
+
+  var focus = svg.append("g")
+      .attr("class", "focus")
+      .style("display", "none");
+  
+  focus.append("text")
+      .attr("class", "abbr")
+      .attr("x", -10)
+      .attr("y", -30)
+      .attr("dy", ".35em");
+
+  focus.append("text")
+      .attr("class", "income")
+      .attr("x", -10)
+      .attr("y", -13)
+      .attr("dy", ".35em");
+}
+
+</script>
+</body>
+</html>
