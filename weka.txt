@@ -1,0 +1,119 @@
+SECTION-A
+
+1.
+random forest
+parameters: -P 100 -I 100 -num-slots 1 -K 0 -M 1.0 -V 0.001 -S 1
+running time: 0.27s 
+accuracy: 86.68%
+confusion matrix: 
+  a   b   <-- classified as
+ 316  41 |   a = 0
+  46 250 |   b = 1
+
+2.
+Logistic Regression
+parameters: -R 1.0E-8 -M -1 -num-decimal-places 4
+running time: 0.2s
+accuracy: 86.37%
+confusion matrix:
+   a   b   <-- classified as
+ 302  55 |   a = 0
+  34 262 |   b = 1 
+
+3.
+multi-layer perceptron
+parameters: -L 0.3 -M 0.2 -N 500 -V 0 -S 0 -E 20 -H a
+running time:5.07s
+accuracy: 83.31%
+confusion matrix:
+   a   b   <-- classified as
+ 298  59 |   a = 0
+  50 246 |   b = 1
+
+
+4.
+SVM
+parameters: -F 0 -L 0.01 -R 1.0E-4 -E 500 -C 0.001 -S 1
+running time: 0.11s
+accuracy: 85.91%
+confusion matrix:
+   a   b   <-- classified as
+ 286  71 |   a = 0
+  21 275 |   b = 1
+
+5.
+Logistic Model Tree (LMT)
+Parameters: -I -1 -M 15 -W 0.0
+running time: 0.78s
+accuracy:85.76%
+confusion matrix:
+   a   b   <-- classified as
+ 294  63 |   a = 0
+  30 266 |   b = 1
+
+SECTION-B
+
+1a.
+
+I restricted the maximum depth to 1 and number of randomly chosen features to 1
+
+Runtime decreased to 0.01s as well as the accuracy decreased to 80.24%
+
+It was because limiting the tree depth typically would make the ensemble converge a little earlier. I would rarely fiddle with tree depth, although computing time is lowered, it does not give any other bonus. Also, Deeper trees reduces the bias. Cross-validating your experiences with a wide range of features, we should obtain a performance curve and be able to identify a maximum pointing out what is the best value for this parameter.Hence, when very less randomly chosen features are used, underfitting happens
+
+1b.
+
+I used CONJUGATE GRADIENT DESCENT by enabling it to true.
+
+Runtime increased to 1.06s from 0.2s but the accuracy increased only by 0.2% and the confusion matrix obtained is === Confusion Matrix ===
+
+   a   b   <-- classified as
+ 303  54 |   a = 0
+  34 262 |   b = 1
+
+It was because in terms of convergence rates,  Conjugate Gradient (CG) iterations approximately equals one step of Newton's method. BFGS is a quasi-Newton method, but the same sort of observation should hold. It reaches convergence in fewer iterations with BFGS unless there are a couple CG directions in which there is a lot of descent, and then after a few CG iterations, you restart it. CG-like methods are cheaper if matrix-vector products are cheap and your problem is so large that storing the Hessian is difficult or impossible. BFGS involves some more vector-vector products to update its approximate Hessian, so each BFGS iteration will be more expensive, but you'll require fewer of them to reach a local minimum.
+
+
+1c.
+I increased the learning rate and momentum to 1
+
+The runtime decreased by 0.5s and the accuracy dropped to 53.59%
+
+This was because Momentum simply adds a fraction m of the previous weight update to the current one. When the gradient keeps pointing in the same direction, this will increase the size of the steps taken towards the minimum. Therefore, it is necessary to reduce the global learning rate when using a lot of momentum (m close to 1). If you combine a high learning rate with a lot of momentum, you will rush past the minimum with huge steps, which as you can see above reduces the accuracy drastically
+
+1d.
+I set the dontNormalise to true
+
+The runtime reduces by 0.07 but the accuracy dropped to 67.69%.
+confusion matrix obtained is
+
+   a   b   <-- classified as
+ 234 123 |   a = 0
+  88 208 |   b = 1
+
+This was because maybe SVM will do better without normalising only if the features have roughly the same magnitude or unless I know beforehand that some feature is much more important than others, in which case it's okay for it to have a larger magnitude.Otherwise, if I don't normalize my data, Iam unwittingly giving some features more importance than others. And this, in turn can seriously affect the accuracy of predictions made.s
+
+
+1e.
+I set the � value used for weight trimming to 1
+
+The runtime decreased by 0.6s and the accuracy dropped to 54.67%
+
+This was because weight trimming is an effective method for reducing computation of boosted models. only training instances carrying  (1 - �)% of the total weight mass are used for building the simple linear regression model, where � ? [0, 1]. Typically � ? [0.01, 0.1]. We used � = 0.1. In
+later iterations more of the training instances become correctly classified with a higher confidence; hence, more of them receive a lower weight and the number of instances carrying (1 - �)% of the weight becomes smaller. The computation needed to build the simple linear regression model thus
+decreases as the iterations proceed. Of course, the computational complexity is still the same; however, it is reduced by a potentially large constant factor and in practice, a reduction in computation time is achieved without sacrificing predictive accuracy. But when � is 1 there is no weight assigned ie: (1-1)=0. so, the accuracy drops to significant level in this case.
+
+2.
+The accuracy yielded by my random forest tree from Q2 is between 85-86% which is almost on par with the results obtained in WEKA which is 86.68%.
+Weka runs much faster than my implementation because I have 40 trees.
+Weka's random forest tree takes samples randomly without replacement while mine chooses features based on info gain and does random sampling with replacement. This does not necessarily result in decrease in accuracy since the results could vary from dataset to dataset. Hence, there is no significant difference in performance accuracy here.
+
+
+3.From the result obtained from SECTION-A, it is clearly obvious that Random forest tree and Logistic Regression perform the best in terms of both accuracy(~87%) and runtime(0.2-0.3s)
+But in my opinion, Logistic Regression is better performing than the random forest tree.
+
+I think this because Logistic regression is intrinsically simple and more robust. The independent variables don�t have to be normally distributed, or have equal variance in each group and so is less prone to over-fitting.
+
+In general, I feel that Logistic regression is a pretty well-behaved classification algorithm that can be trained as long as you expect your features to be roughly linear and the problem to be linearly separable. You can do some feature engineering to turn most non-linear features into linear pretty easily. It is also pretty robust to noise and you can avoid overfitting and even do feature selection by using l2 or l1 regularization. Logistic regression can also be used in Big Data scenarios since it is pretty efficient and can be distributed using admm.
+Another advantage is that the output can be interpreted as a probability. This is something that comes as a nice side effect since you can use it, for example, for ranking instead of classification. 
+
